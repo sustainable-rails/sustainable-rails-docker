@@ -1,6 +1,24 @@
+# This line says which base image we are building off of.
+# In this case, it's an Ubuntu 19.10 image running Linux
 FROM amd64/ubuntu:19.10
+
+# This sets the environment variable DEBIAN_FRONTEND that
+# all subsequent commands will see in their environments.
+# This particular variable tells the `apt-get` command
+# to run in a non-iteractive way, so we don't have to provide
+# user input when using `apt-get`
 ENV DEBIAN_FRONTEND noninteractive
 
+# RUN does a few things.  First, it runs the command given to it inside the container
+# being built that will result in the image.  Second, however, it creates
+# a "layer", which is essentially a cache of the current state of the image being 
+# built.  That means, if we change something AFTER this RUN directive, this
+# directive won't be re-executed—docker will pull the layer from a cache.
+#
+# This particular RUN directive is first because of what it does. It sets up
+# the system software that's needed for everything else.  apt-get update
+# refreshes the local cache of what software is available to install
+# and then apt-get install pulls down packages and installs them.
 RUN apt-get update -q && apt-get install -qy \
                             autoconf\
                             bison\
@@ -32,12 +50,24 @@ RUN apt-get update -q && apt-get install -qy \
                             zip \
                             zlib1g-dev
 
+# Here, we set up NodeJS, per their instructions. Yes, piping
+# random websites into bash is a bit scary, from a security
+# persecptive, but a) this is only setting up a dev envrionment, and
+# b) if `nodesource.com` has been taken over, you have bigger problems
+# than following along with my book
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs
 
+# Here, we set up Yarn, per their instructions.
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn
 
+# This sets up a variable we can refer to later.  Because
+# we have to know the Ruby Installer version in so many places,
+# we set it once here.
 ARG ruby_installer_version=0.7.0
 
+# This sets up Ruby Installer, which we will then use to install Ruby.  This is
+# taken from the Ruby Installer GitHub page and is trying to make sure
+# that what we'e downloaded matches what the maintainers have created.
 RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/postmodern/ruby-install/archive/v${ruby_installer_version}.tar.gz && \
     wget https://raw.github.com/postmodern/postmodern.github.io/master/postmodern.asc && \
     gpg --import postmodern.asc && \
@@ -47,13 +77,26 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
     cd ruby-install-${ruby_installer_version}/ && \
     make install
 
+# This actually installs Ruby, and installes whatever the latest
+# 2.6 version is.  This is a separate run command because we might
+# want to change Ruby versions locally, but we *don't* what to have
+# to re-download and install Ruby Installer if we can help it.
 RUN ruby-install --system ruby 2.6
 
+# This configures RubyGems to not install documentation, 
+# which will speed up gem installs. It also sets vi mode
+# for bash (I'm a vim person so I need this :), and finally
+# installs Rails.
+#
+# The reason we install Rails in the Dockerfile is because we need
+# it to run the rails CLI to do rails new, and we don't want to 
+# have to always do that every time we restart our container.
 RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails
-
 
 WORKDIR «value WORKDIR from bin/vars»
 VOLUME  /workdir
+
+# This says to expose the given port to the outside world.
 EXPOSE «value EXPOSE from bin/vars»
 
 # vim: ft=Dockerfile

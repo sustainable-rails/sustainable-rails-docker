@@ -19,6 +19,12 @@ re-run `bin/build`
 * `bin/start` in one terminal. This is a wrapper around `docker-compose up`
 * In another terminal, you can do something like `bin/exec bash` to "log in" to the running container.  `bin/exec`
 will run any command you give it in the container, so you can do `bin/exec gem install rails` or whatever.
+* Inside the container, you can connect to Postgres like so:
+
+  ```
+  > psql -Hdb -Upostgres -p5432 # password, when promted, is postgres
+  postgres=#
+  ```
 
 ### Note
 
@@ -30,3 +36,10 @@ must:
 
 When you do that, your Rails app should be available to your localhost on port 9000 (or whatever value you set in `bin/vars` for `EXPOSE`)
 
+## How does this work?
+
+The `Dockerfile` and `docker-compose.yml` files that get generated are heavily commented.
+
+### Why didn't you use the Ruby base image?
+
+I wanted to be more explicit about what's being installed.
