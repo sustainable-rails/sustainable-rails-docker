@@ -21,9 +21,10 @@ fi
 container_id=`docker ps --no-trunc  --filter ancestor=${TAG} --format "{{.ID}}"`
 
 if [ -z $container_id ]; then
-  echo "😦 The container is not running. Try doing bin/sh in another terminal"
+  echo "😦 The container is not running. Try doing bin/start in another terminal"
   exit 1
 else
+  echo "🚂 Running '$CMD' inside container with id '$container_id'"
   docker exec -it $container_id $CMD
 fi
 
