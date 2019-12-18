@@ -1,0 +1,30 @@
+. bin/vars
+
+set -e
+
+CMD=$*
+
+if [ -z "$CMD" ]; then
+  echo "😐 You should specify a command to run e.g. $0 ls -l"
+  exit 1
+fi
+if [ "$CMD" == "help" ] || [ "$CMD" == "--help" ] || [ "$CMD" == "-h" ]; then
+  echo "USAGE"
+  echo "  $0 command"
+  echo
+  echo "EXAMPLES"
+  echo
+  echo "  $0 ls -ltr # run ls -ltr inside the running container"
+  echo "  $0 make    # run make inside the running container"
+  exit 0
+fi
+container_id=`docker ps --no-trunc  --filter ancestor=${TAG} --format "{{.ID}}"`
+
+if [ -z $container_id ]; then
+  echo "😦 The container is not running. Try doing bin/sh in another terminal"
+  exit 1
+else
+  docker exec -it $container_id $CMD
+fi
+
+# vim: ft=bash

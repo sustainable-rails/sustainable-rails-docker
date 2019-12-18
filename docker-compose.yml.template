@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  TAG:
+    image: TAG
+    entrypoint: "tail -f /dev/null"
+    ports:
+      - "LOCAL_PORT:EXPOSE"
+    volumes:
+      - type: bind
+        source: "VOLUME_SOURCE"
+        target: "WORKDIR"

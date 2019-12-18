@@ -1,0 +1,12 @@
+FROM ubuntu:18.04
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update -q && apt-get install -qy \
+      man make git netcat \
+      software-properties-common
+
+WORKDIR «value WORKDIR from bin/vars»
+VOLUME  /workdir
+EXPOSE «value EXPOSE from bin/vars»
+
+# vim: ft=Dockerfile

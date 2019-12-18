@@ -1,0 +1,4 @@
+echo "Starting docker-compose.yml"
+docker-compose up
+
+# vim: ft=bash
