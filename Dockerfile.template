@@ -51,6 +51,7 @@ RUN ruby-install --system ruby 2.6
 
 RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails
 
+
 WORKDIR «value WORKDIR from bin/vars»
 VOLUME  /workdir
 EXPOSE «value EXPOSE from bin/vars»
