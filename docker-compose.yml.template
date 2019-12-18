@@ -9,3 +9,5 @@ services:
       - type: bind
         source: "VOLUME_SOURCE"
         target: "WORKDIR"
+  db:
+    image: postgres:9.6.12

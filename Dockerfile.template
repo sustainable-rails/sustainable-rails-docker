@@ -1,9 +1,55 @@
-FROM ubuntu:18.04
+FROM amd64/ubuntu:19.10
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update -q && apt-get install -qy \
-      man make git netcat \
-      software-properties-common
+                            autoconf\
+                            bison\
+                            build-essential\
+                            curl \
+                            g++ \
+                            gcc \
+                            git \
+                            gnupg2 \
+                            libffi-dev \
+                            libgconf-2-4 \
+                            libgdbm-dev \
+                            libncurses5-dev \
+                            libpq-dev \
+                            libreadline-dev \
+                            libsqlite3-dev \
+                            libssl-dev \
+                            libxi6 \
+                            libyaml-dev \
+                            make \
+                            man \
+                            netcat \
+                            postgresql-client \
+                            software-properties-common\
+                            sqlite3 \
+                            tzdata \
+                            wget \
+                            xvfb \
+                            zip \
+                            zlib1g-dev
+
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn
+
+ARG ruby_installer_version=0.7.0
+
+RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/postmodern/ruby-install/archive/v${ruby_installer_version}.tar.gz && \
+    wget https://raw.github.com/postmodern/postmodern.github.io/master/postmodern.asc && \
+    gpg --import postmodern.asc && \
+    wget https://raw.github.com/postmodern/ruby-install/master/pkg/ruby-install-${ruby_installer_version}.tar.gz.asc && \
+    gpg --verify ruby-install-${ruby_installer_version}.tar.gz.asc ruby-install-${ruby_installer_version}.tar.gz && \
+    tar -xzvf ruby-install-${ruby_installer_version}.tar.gz && \
+    cd ruby-install-${ruby_installer_version}/ && \
+    make install
+
+RUN ruby-install --system ruby 2.6
+
+RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails
 
 WORKDIR «value WORKDIR from bin/vars»
 VOLUME  /workdir
