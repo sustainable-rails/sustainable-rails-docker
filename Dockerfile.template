@@ -42,6 +42,7 @@ RUN apt-get update -q && apt-get install -qy \
                             man \
                             netcat \
                             postgresql-client \
+                            rsync \
                             software-properties-common\
                             sqlite3 \
                             tzdata \
@@ -77,11 +78,11 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
     cd ruby-install-${ruby_installer_version}/ && \
     make install
 
-# This actually installs Ruby, and installes whatever the latest
-# 2.6 version is.  This is a separate run command because we might
+# This actually installs Ruby, and installs 2.6.5.
+# This is a separate run command because we might
 # want to change Ruby versions locally, but we *don't* what to have
 # to re-download and install Ruby Installer if we can help it.
-RUN ruby-install --system ruby 2.6
+RUN ruby-install --system ruby 2.6.5
 
 # This configures RubyGems to not install documentation, 
 # which will speed up gem installs. It also sets vi mode
@@ -93,9 +94,25 @@ RUN ruby-install --system ruby 2.6
 # have to always do that every time we restart our container.
 RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails
 
+
+
+# This sets up the locale to be American English, using
+# a UTF-8 encoding.  By default, Ubuntu uses a "posix"
+# encoding, which is woefully tied to ASCII and
+# creates annoying problems later.
+#
+# This should not have any bearing on the
+# localization or internationalization of your
+# Rails app.
+RUN apt-get install locales && locale -a ; \
+    locale-gen en_US.UTF-8 && locale -a ; \
+    update-locale LANG=en_US.utf8 && \
+    dpkg-reconfigure locales
+
+ENV LANG=en_US.utf8
+
 WORKDIR «value WORKDIR from bin/vars»
 VOLUME  /workdir
-
 # This says to expose the given port to the outside world.
 EXPOSE «value EXPOSE from bin/vars»
 
