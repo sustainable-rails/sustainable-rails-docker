@@ -1,6 +1,6 @@
 # sustainable-rails-docker
 
-In my book, [Sustainable Web Development with Ruby on Rails](https://sustaiable-rails.com), I have the reader set
+In my book, [Sustainable Web Development with Ruby on Rails](https://sustainable-rails.com), I have the reader set
 up a Docker-based development environment in which to run the examples.
 
 This is that environment, cloneable so the reader doesn't have to type in a ton of stuff.
