@@ -115,6 +115,22 @@ RUN apt-get install locales && locale -a ; \
 
 ENV LANG=en_US.utf8
 
+RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
+    apt-key add - && \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
+    tee  /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get -y update && \
+    apt-get -y install google-chrome-stable && \
+    wget https://chromedriver.storage.googleapis.com/80.0.3987.16/chromedriver_linux64.zip && \
+    unzip chromedriver_linux64.zip && \
+    mv chromedriver /usr/bin/chromedriver && \
+    chown root:root /usr/bin/chromedriver && \
+    chmod +x /usr/bin/chromedriver
+
+# Ruby 2.7 and Rails result in a lot of deprecation warnings.
+# These are annoying and we don't want to see them right now
+RUN echo "RUBYOPT=-W:no-deprecated" >> /etc/environment
+
 WORKDIR «value WORKDIR from bin/vars»
 VOLUME  /workdir
 # This says to expose the given port to the outside world.
