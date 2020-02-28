@@ -18,11 +18,20 @@ services:
     # This maps the WORKDIR directory inside the Docker
     # container to our hosts directory, VOLUME_SOURCE
     # which is what allows us to share files between
-    # our computer and the Docker container
+    # our computer and the Docker container.
+    #
+    # The "delegated" consistency should make disk access faster
+    # on macOS. This will cache reads and writes making the container
+    # authoritative, so your computer will be behind, but not by much
+    #
+    # The second volume is our dependencies-cache as mentioned in the Dockerfile
     volumes:
       - type: bind
         source: "VOLUME_SOURCE"
         target: "WORKDIR"
+        consistency: "delegated"
+      - type: volume
+        target: /usr/dependencies-cache
   # This creates a SECOND container
   # called "db" that will run Postgres.
   # This value here (db) will be the name
@@ -40,18 +49,24 @@ services:
     # The "postgres" part tells Docker
     # to look in the postgres "docker repo".
     #
-    # The 9.6.12 part is the "tag" inside that 
+    # The 12 part is the "tag" inside that 
     # repo, representing the image to fetch.
     # Fortunately, it's the same as the version
     # of Postgres we want.
     #
     # If you scroll down to the section titled
     # "Supported tags…", you'll see
-    # the 9.6.12 tag and you can click through
+    # the 12 tag and you can click through
     # to see the Dockerfile that built the image.
     #
     # Lastly, if you scroll down to the part 
     # titled "Environment Variables", you
     # can see the default values for
     # connecting to postgres.
-    image: postgres:9.6.12
+    image: postgres:12
+    # In Postgres 12, there is no default value for the password.
+    # Since we're using this for dev, we need to set it
+    # and it doesn't matter if it's 'secure', so we'll use
+    # "postgres"
+    environment:
+      POSTGRES_PASSWORD: postgres

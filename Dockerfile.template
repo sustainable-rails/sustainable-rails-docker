@@ -58,8 +58,14 @@ RUN apt-get update -q && apt-get install -qy \
 # than following along with my book
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs
 
+# This creates disk space that survives between container restarts.
+# This volume is for storing RubyGems and Node modules so that we
+# don't have to bundle install or yarn install every single time we
+# restart the docker container.
+VOLUME /usr/dependencies-cache
+
 # Here, we set up Yarn, per their instructions.
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn && yarn config set cache-folder /usr/dependencies-cache/yarn
 
 # This sets up a variable we can refer to later.  Because
 # we have to know the Ruby Installer version in so many places,
@@ -86,7 +92,7 @@ RUN ruby-install --system ruby 2.7.0
 
 # We need to install bundler explicitly, since the version
 # that comes with Ubuntu is pretty out of date
-RUN gem install bundler
+RUN gem install bundler && bundle config path /usr/dependencies-cache/bundler 
 
 # This configures RubyGems to not install documentation, 
 # which will speed up gem installs. It also sets vi mode
@@ -129,10 +135,10 @@ RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
 
 # Ruby 2.7 and Rails result in a lot of deprecation warnings.
 # These are annoying and we don't want to see them right now
-RUN echo "RUBYOPT=-W:no-deprecated" >> /etc/environment
+RUN echo "RUBYOPT=-W:no-deprecated" >> /etc/environment &&  echo "export RUBYOPT=-W:no-deprecated" >> ~/.profile
 
 WORKDIR «value WORKDIR from bin/vars»
-VOLUME  /workdir
+
 # This says to expose the given port to the outside world.
 EXPOSE «value EXPOSE from bin/vars»
 
