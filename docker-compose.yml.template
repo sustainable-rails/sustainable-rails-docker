@@ -67,6 +67,7 @@ services:
     # In Postgres 12, there is no default value for the password.
     # Since we're using this for dev, we need to set it
     # and it doesn't matter if it's 'secure', so we'll use
-    # "postgres"
+    # "postgres" as the password
     environment:
       POSTGRES_PASSWORD: postgres
+# vim: ft=yaml

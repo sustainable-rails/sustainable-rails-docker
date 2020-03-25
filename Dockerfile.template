@@ -61,14 +61,10 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-k
 # than following along with my book
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs
 
-# This creates disk space that survives between container restarts.
-# This volume is for storing RubyGems and Node modules so that we
-# don't have to bundle install or yarn install every single time we
-# restart the docker container.
-VOLUME /usr/dependencies-cache
-
-# Here, we set up Yarn, per their instructions.
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn && yarn config set cache-folder /usr/dependencies-cache/yarn
+# Here, we set up Yarn, per their instructions. We'll
+# also creat the dependencies-cache folder which will
+# later be a volume to hold dependencies we download here
+RUN mkdir /usr/dependencies-cache && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn && yarn config set cache-folder /usr/dependencies-cache/yarn
 
 # This sets up a variable we can refer to later.  Because
 # we have to know the Ruby Installer version in so many places,
@@ -93,6 +89,9 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
 # to re-download and install Ruby Installer if we can help it.
 RUN ruby-install --system ruby 2.7.0
 
+# OMG SO. MANY. DEPRECATION. WARNINGS. I. DO. NOT. CARE.
+ENV RUBYOPT==W:no-deprecated
+
 # We need to install bundler explicitly, since the version
 # that comes with Ubuntu is pretty out of date
 RUN gem install bundler && bundle config path /usr/dependencies-cache/bundler 
@@ -105,8 +104,10 @@ RUN gem install bundler && bundle config path /usr/dependencies-cache/bundler
 # The reason we install Rails in the Dockerfile is because we need
 # it to run the rails CLI to do rails new, and we don't want to 
 # have to always do that every time we restart our container.
-RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails
-
+#
+# While we're doing that, we might as well create a new rails app and bundle
+# install it so we get the base gems inside this docker file
+RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails && cd /usr/dependencies-cache && rails new empty-rails-app --force --database=postgresql --skip-webpack-install --skip-bundle && cd empty-rails-app && bundle update
 
 
 # This sets up the locale to be American English, using
@@ -137,8 +138,17 @@ RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
     chmod +x /usr/bin/chromedriver
 
 # Ruby 2.7 and Rails result in a lot of deprecation warnings.
-# These are annoying and we don't want to see them right now
+# These are annoying and we don't want to see them right now.
+# I know I sent ENV above, but it doesn't seem to work, and TBH
+# this doesn't actually work unless you remember to make bash a login
+# shell.  No idea why.
 RUN echo "RUBYOPT=-W:no-deprecated" >> /etc/environment &&  echo "export RUBYOPT=-W:no-deprecated" >> ~/.profile
+
+# This creates disk space that survives between container restarts.
+# This volume is for storing RubyGems and Node modules so that we
+# don't have to bundle install or yarn install every single time we
+# restart the docker container.
+VOLUME /usr/dependencies-cache
 
 WORKDIR «value WORKDIR from bin/vars»
 
