@@ -90,7 +90,7 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
 RUN ruby-install --system ruby 2.7.0
 
 # OMG SO. MANY. DEPRECATION. WARNINGS. I. DO. NOT. CARE.
-ENV RUBYOPT==W:no-deprecated
+ENV RUBYOPT=-W:no-deprecated
 
 # We need to install bundler explicitly, since the version
 # that comes with Ubuntu is pretty out of date
