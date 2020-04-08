@@ -83,11 +83,11 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
     cd ruby-install-${ruby_installer_version}/ && \
     make install
 
-# This actually installs Ruby, and installs 2.7.0
+# This actually installs Ruby, and installs 2.7.1
 # This is a separate run command because we might
 # want to change Ruby versions locally, but we *don't* what to have
 # to re-download and install Ruby Installer if we can help it.
-RUN ruby-install --system ruby 2.7.0
+RUN ruby-install --system ruby 2.7.1
 
 # OMG SO. MANY. DEPRECATION. WARNINGS. I. DO. NOT. CARE.
 ENV RUBYOPT=-W:no-deprecated
@@ -125,13 +125,31 @@ RUN apt-get install locales && locale -a ; \
 
 ENV LANG=en_US.utf8
 
+# This downloads chrome and chromedriver.  This is fraught with implicit
+# nonsense because you cannot specify the version of Chrome to download, however
+# you MUST specify the version of chromedriver and they both MUST match.
+#
+# To update this:
+#
+# 1. Go to The Internet and figure out what is the latest version of Chrome.
+#    This is presumably/hopefully/possibly what will be installed by
+#
+#       apt-get -y install google-chrome-stable
+#
+#    in the below code
+#
+# 2. Now, go to https://chromedriver.chromium.org and figure out
+#    which version of chromedriver goes with the latest version of Chrome.
+#    Copy that version string below in the wget invocation.
+#
+# 3. Cross your fingers!
 RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
     apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
     tee  /etc/apt/sources.list.d/google-chrome.list && \
     apt-get -y update && \
     apt-get -y install google-chrome-stable && \
-    wget https://chromedriver.storage.googleapis.com/80.0.3987.16/chromedriver_linux64.zip && \
+    wget https://chromedriver.storage.googleapis.com/81.0.4044.69/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chown root:root /usr/bin/chromedriver && \
