@@ -1,3 +1,4 @@
+#!/bin/sh
 echo "🚀 Starting docker-compose.yml"
 docker-compose up
 

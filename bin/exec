@@ -1,3 +1,4 @@
+#!/bin/sh
 . bin/vars
 
 set -e
