@@ -2,7 +2,7 @@
 EXPOSE=3000
 # Set this to the port on your localhost you want to use to access
 # the EXPOSE port above
-LOCAL_PORT=9000
+LOCAL_PORT=9999
 # Set this to the tagname for the Docker image
 TAG=sustainable-rails-development
 

@@ -8,7 +8,7 @@ if [ -z "$CMD" ]; then
   echo "😐 You should specify a command to run e.g. $0 ls -l"
   exit 1
 fi
-if [ "$CMD" == "help" ] || [ "$CMD" == "--help" ] || [ "$CMD" == "-h" ]; then
+if [ "$CMD" = "help" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ]; then
   echo "USAGE"
   echo "  $0 command"
   echo
