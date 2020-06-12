@@ -70,4 +70,9 @@ services:
     # "postgres" as the password
     environment:
       POSTGRES_PASSWORD: postgres
+  # Here, we set up Redis which we don't need to use in the book
+  # until we start talking about background jobs.  Like the
+  # Postgres block above, this starts up a Redis server using 5.x.x
+  redis:
+    image: redis:5
 # vim: ft=yaml
