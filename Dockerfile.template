@@ -107,7 +107,7 @@ RUN gem install bundler && bundle config path /usr/dependencies-cache/bundler
 #
 # While we're doing that, we might as well create a new rails app and bundle
 # install it so we get the base gems inside this docker file
-RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails && cd /usr/dependencies-cache && rails new empty-rails-app --force --database=postgresql --skip-webpack-install --skip-bundle && cd empty-rails-app && bundle update
+RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails --version ">= 6.1" && cd /usr/dependencies-cache && rails new empty-rails-app --force --database=postgresql --skip-webpack-install --skip-bundle && cd empty-rails-app && bundle update
 
 
 # This sets up the locale to be American English, using
