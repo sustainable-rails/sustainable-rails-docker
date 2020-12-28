@@ -1,6 +1,6 @@
 # This line says which base image we are building off of.
-# In this case, it's an Ubuntu 19.10 image running Linux
-FROM amd64/ubuntu:19.10
+# In this case, it's an Ubuntu 20.10 image running Linux
+FROM amd64/ubuntu:20.10
 
 # This sets the environment variable DEBIAN_FRONTEND that
 # all subsequent commands will see in their environments.
