@@ -9,8 +9,6 @@ echo "# make changes. Also note that some"                    >> Dockerfile
 echo "# values come from bin/vars, so check that out as well" >> Dockerfile
 
 cat Dockerfile.template | \
-    sed '/%SSHD%/ r sshd.docker-fragment' | \
-    sed 's/%SSHD%//g' | \
     sed "s/^EXPOSE.*$/EXPOSE $EXPOSE/"    | \
     sed "s:^WORKDIR.*$:WORKDIR $WORKDIR:"  \
     >> Dockerfile
