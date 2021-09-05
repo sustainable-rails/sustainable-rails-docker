@@ -19,7 +19,7 @@ if [ "$CMD" = "help" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ]; then
   echo "  $0 make    # run make inside the running container"
   exit 0
 fi
-container_id=`docker ps --no-trunc  --filter ancestor=${TAG} --format "{{.ID}}"`
+container_id=`docker ps --no-trunc  --filter ancestor=${ACCOUNT}/${REPO}:${TAG} --format "{{.ID}}"`
 
 if [ -z $container_id ]; then
   echo "😦 The container is not running. Try doing bin/start in another terminal"

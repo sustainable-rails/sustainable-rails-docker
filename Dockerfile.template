@@ -59,7 +59,7 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-k
 # persecptive, but a) this is only setting up a dev envrionment, and
 # b) if `nodesource.com` has been taken over, you have bigger problems
 # than following along with my book
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && apt-get install -y nodejs
 
 # Here, we set up Yarn, per their instructions. We'll
 # also creat the dependencies-cache folder which will
@@ -67,12 +67,13 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -
 RUN mkdir /usr/dependencies-cache && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn && yarn config set cache-folder /usr/dependencies-cache/yarn
 
 # This sets up a variable we can refer to later.  Because
-# we have to know the Ruby Installer version in so many places,
+# we have to know the ruby-install version in so many places,
 # we set it once here.
-ARG ruby_installer_version=0.7.0
+# https://github.com/postmodern/ruby-install
+ARG ruby_installer_version=0.8.2
 
-# This sets up Ruby Installer, which we will then use to install Ruby.  This is
-# taken from the Ruby Installer GitHub page and is trying to make sure
+# This sets up ruby-install, which we will then use to install Ruby.  This is
+# taken from the ruby-install GitHub page and is trying to make sure
 # that what we'e downloaded matches what the maintainers have created.
 RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/postmodern/ruby-install/archive/v${ruby_installer_version}.tar.gz && \
     wget https://raw.github.com/postmodern/postmodern.github.io/master/postmodern.asc && \
@@ -83,11 +84,11 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
     cd ruby-install-${ruby_installer_version}/ && \
     make install
 
-# This actually installs Ruby, and installs 2.7.1
+# This actually installs Ruby, and installs 3.0.2
 # This is a separate run command because we might
 # want to change Ruby versions locally, but we *don't* what to have
-# to re-download and install Ruby Installer if we can help it.
-RUN ruby-install --system ruby 2.7.2
+# to re-download and install ruby-install if we can help it.
+RUN ruby-install --system ruby 3.0.2
 
 # OMG SO. MANY. DEPRECATION. WARNINGS. I. DO. NOT. CARE.
 ENV RUBYOPT=-W:no-deprecated
@@ -150,13 +151,13 @@ RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
     tee  /etc/apt/sources.list.d/google-chrome.list && \
     apt-get -y update && \
     apt-get -y install google-chrome-stable && \
-    wget https://chromedriver.storage.googleapis.com/86.0.4240.22/chromedriver_linux64.zip && \
+    wget https://chromedriver.storage.googleapis.com/92.0.4515.107/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chown root:root /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver
 
-# Ruby 2.7 and Rails result in a lot of deprecation warnings.
+# Ruby and Rails result in a lot of deprecation warnings.
 # These are annoying and we don't want to see them right now.
 # I know I sent ENV above, but it doesn't seem to work, and TBH
 # this doesn't actually work unless you remember to make bash a login

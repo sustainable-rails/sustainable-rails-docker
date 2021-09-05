@@ -1,5 +1,5 @@
 #!/bin/sh
 echo "🚀 Starting docker-compose.yml"
-docker-compose up
+docker compose up
 
 # vim: ft=bash

@@ -2,8 +2,8 @@ version: "3.7"
 services:
   # This is the name of the container
   # we'll connect to to run commands
-  TAG:
-    image: TAG
+  REPO:
+    image: ACCOUNT/REPO:TAG
     # This says to basically start up the container
     # and do nothing, since we know we're
     # going to connect to it from our computer
@@ -75,4 +75,4 @@ services:
   # Postgres block above, this starts up a Redis server using 5.x.x
   redis:
     image: redis:5
-# vim: ft=yaml
+# vim: ft=yaml nospell
