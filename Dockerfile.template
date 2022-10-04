@@ -127,31 +127,16 @@ RUN apt-get -y update && \
 
 ENV LANG=en_US.utf8
 
-# This downloads chrome and chromedriver.  This is fraught with implicit
-# nonsense because you cannot specify the version of Chrome to download, however
-# you MUST specify the version of chromedriver and they both MUST match.
-#
-# To update this:
-#
-# 1. Go to The Internet and figure out what is the latest version of Chrome.
-#    This is presumably/hopefully/possibly what will be installed by
-#
-#       apt-get -y install google-chrome-stable
-#
-#    in the below code
-#
-# 2. Now, go to https://chromedriver.chromium.org and figure out
-#    which version of chromedriver goes with the latest version of Chrome.
-#    Copy that version string below in the wget invocation.
-#
-# 3. Cross your fingers!
+# This downloads chrome and chromedriver.
 RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
     apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
     tee  /etc/apt/sources.list.d/google-chrome.list && \
     apt-get -y update && \
     apt-get -y install google-chrome-stable && \
-    wget https://chromedriver.storage.googleapis.com/92.0.4515.107/chromedriver_linux64.zip && \
+    CHROMEVER=$(google-chrome --product-version | grep -o "[^.]*\.[^.]*\.[^.]*") && \
+    DRIVERVER=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROMEVER") && \
+    wget https://chromedriver.storage.googleapis.com/$DRIVERVER/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chown root:root /usr/bin/chromedriver && \
