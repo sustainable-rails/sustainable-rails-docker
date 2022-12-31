@@ -15,7 +15,7 @@ If you just want to follow along, I suggest you [pull the image from Docker Hub]
    * `REPO` - repo name for Docker Hub (again, only used for naming the image, but if you are going to push, make sure you have created this repo on Docker Hub. It does not need to be public)
    * `TAG` - tag for the image. Recommend you come up with a good scheme to avoid confusing locally.
 4. Edit `Dockerfile.template` and `docker-compose.yml.template` as needed to change stuff.  *DO NOT* edit `Dockerfile` or `docker-compose.yml` directly as `bin/build` will be using `bin/vars` to make sure that those two files are consistent with one another.
-5. `bin/build` will re-generate `Dockerfile` and `docker-compose.yml` based on the contents of the two `.template` files and `bin/vars`.
+5. `bin/build` will re-generate `Dockerfile` and `docker-compose.yml` based on the contents of the two `.template` files and `bin/vars`. Note that this may take a really long time since it compiles Ruby from source.  On an M2 Macbook Air, the entire process takes about an hour the first time. Once you have Ruby installed, changes to the Docker config *after* that in the file can be built much faster.
 6. `bin/start` will start up whatever is in `docker-compose.yml`.
 7. In another terminal window, `bin/exec bash` with run `bash` inside the image where Ruby and Rails are installed, effectively "logging you in" to the running container.  You should be in `/root/work`, running as `root` and see all the files in this repo mirrored.  If you run `rails new my-app` it will create a new app in this directory.
 
