@@ -70,6 +70,10 @@ services:
     # "postgres" as the password
     environment:
       POSTGRES_PASSWORD: postgres
+    # Here, we expose Postgres' default port of 5432 onto
+    # localhost
+    ports:
+      - "5432:PG_PORT"
   # Here, we set up Redis which we don't need to use in the book
   # until we start talking about background jobs.  Like the
   # Postgres block above, this starts up a Redis server using 5.x.x
