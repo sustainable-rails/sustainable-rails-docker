@@ -70,7 +70,7 @@ RUN mkdir /usr/dependencies-cache && curl -sS https://dl.yarnpkg.com/debian/pubk
 # we have to know the ruby-install version in so many places,
 # we set it once here.
 # https://github.com/postmodern/ruby-install
-ARG ruby_installer_version=0.8.2
+ARG ruby_installer_version=0.8.5
 
 # This sets up ruby-install, which we will then use to install Ruby.  This is
 # taken from the ruby-install GitHub page and is trying to make sure
@@ -84,11 +84,11 @@ RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/pos
     cd ruby-install-${ruby_installer_version}/ && \
     make install
 
-# This actually installs Ruby, and installs 3.0.2
+# This actually installs Ruby, and installs 3.1.3
 # This is a separate run command because we might
 # want to change Ruby versions locally, but we *don't* what to have
 # to re-download and install ruby-install if we can help it.
-RUN ruby-install --system ruby 3.0.2
+RUN ruby-install --system ruby 3.1.3
 
 # OMG SO. MANY. DEPRECATION. WARNINGS. I. DO. NOT. CARE.
 ENV RUBYOPT=-W:no-deprecated
@@ -151,7 +151,7 @@ RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
     tee  /etc/apt/sources.list.d/google-chrome.list && \
     apt-get -y update && \
     apt-get -y install google-chrome-stable && \
-    wget https://chromedriver.storage.googleapis.com/92.0.4515.107/chromedriver_linux64.zip && \
+    wget https://chromedriver.storage.googleapis.com/108.0.5359.71/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chown root:root /usr/bin/chromedriver && \
