@@ -6,6 +6,16 @@ If you just want to follow along, I suggest you [pull the image from Docker Hub]
 
 *This* repo is how that image is built, and you can use this to make your own.
 
+## What's in the Image
+
+* Ruby & Bundler
+* Node
+* Rails
+* Chromedriver
+
+The image is quite large because it installs all the gems needed for a new Rails app to work. In
+theory, when you use this image, `rails new` will not need to install any gems from the Internet.
+
 ## Customizing
 
 1. Clone this repo
@@ -13,7 +23,7 @@ If you just want to follow along, I suggest you [pull the image from Docker Hub]
 3. Edit `bin/vars`.  In particular, you will need to modify:
    * `ACCOUNT` - account name on Docker Hub (used for naming the image only, but if you plan to push, make sure this value is accurate)
    * `REPO` - repo name for Docker Hub (again, only used for naming the image, but if you are going to push, make sure you have created this repo on Docker Hub. It does not need to be public)
-   * `TAG` - tag for the image. Recommend you come up with a good scheme to avoid confusing locally.
+   * `TAG` - tag for the image. Recommend you come up with a good scheme to avoid confusing locally. I use `«rails-version»--«ruby-version»`, e.g. `rails-7.0.4--ruby-3.1.3`
 4. Edit `Dockerfile.template` and `docker-compose.yml.template` as needed to change stuff.  *DO NOT* edit `Dockerfile` or `docker-compose.yml` directly as `bin/build` will be using `bin/vars` to make sure that those two files are consistent with one another.
 5. `bin/build` will re-generate `Dockerfile` and `docker-compose.yml` based on the contents of the two `.template` files and `bin/vars`. Note that this may take a really long time since it compiles Ruby from source.  On an M2 Macbook Air, the entire process takes about an hour the first time. Once you have Ruby installed, changes to the Docker config *after* that in the file can be built much faster.
 6. `bin/start` will start up whatever is in `docker-compose.yml`.
@@ -44,7 +54,7 @@ I wanted to be more explicit about what's being installed.
 
 #### Why is this all generated?
 
-`docker-compose.yml` and `Dockerfile` share some values, but Docker provides no mechanism for that. So, the files are generated.
+`docker-compose.yml` and `Dockerfile` share some values, but Docker provides no easy mechanism for that that I could figure out. So, the files are generated.
 
 #### Why not use Vagrant?
 
@@ -52,7 +62,4 @@ No reason, but Docker is a more generally useful skill to have.
 
 #### I'm on MacOS and it's SUPER SLOW
 
-Yup.  You can [set up
-NFS](https://naildrivin5.com/blog/2020/05/13/fast-disk-access-mac-using-docker-nfs-webpack-dev-server.html) to make it much much
-faster.  The only problem is that Webpack dev mode doesn't work.  But that's probably fine because you should using only what
-JavaScript you need, right?
+Yup.  You can [set up NFS](https://naildrivin5.com/blog/2020/05/13/fast-disk-access-mac-using-docker-nfs-webpack-dev-server.html) to make it much much faster.  The only problem is that Webpack dev mode doesn't work.  But that's probably fine because you should using only what JavaScript you need, right?
