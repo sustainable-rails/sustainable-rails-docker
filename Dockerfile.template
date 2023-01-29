@@ -1,163 +1,90 @@
-# This line says which base image we are building off of.
-# In this case, it's an Ubuntu 20.04 image running Linux
-FROM amd64/ubuntu:20.04
+# This is using Docker's official Ruby base image, for
+# arm64v8, which is Apple Silicon. This image is the one
+# used for Rails by default and is maintained by Docker.
+#
+# You can see how the image is made by going here:
+#
+# https://github.com/docker-library/ruby/blob/9fd589661dd0e12b082336e9c6f731196fe39ba8/3.1/bullseye/Dockerfile
+#
+# To determine the OS, you must navigate backwards using the FROM directive from
+# that Dockerfile. You will find your way to Debian's repo here:
+#
+# https://github.com/debuerreotype/docker-debian-artifacts/blob/64b13cf5860ac15c1d909abd7239516db9748fea/bullseye/Dockerfile
+#
+# Thus, this is a Debian-based build.
+FROM arm64v8/ruby:3.1
 
-# This sets the environment variable DEBIAN_FRONTEND that
-# all subsequent commands will see in their environments.
-# This particular variable tells the `apt-get` command
-# to run in a non-iteractive way, so we don't have to provide
-# user input when using `apt-get`
+# Before we start, you'll note there are a lot of RUN directives. Each of these creates a layer that is cached by
+# Docker.  Thus, if you change the second RUN directive and rebuild the image, the first RUN directive doesn't have
+# to be re-executed - the cached layer is used and the second directive is executed from there.
+#
+# Each RUN directive in here is chosen to allow the image to evolve over time while minimizing the amount of
+# re-building that has to be done.
+#
+# Thus, the first few things set up stuff that is unlikely to change frequently, such as OS-level tools and Node.
+# Later directives do stuff like Chrome, which will change a lot and is also unstable.
+
+# This tells our apt-get calls to not ask for input, but does not releive us of the 
+# great responsibility of using -y to all commands to indicate that yes, our invocation
+# of the command to install a package means we do, in fact, want that package installed.
 ENV DEBIAN_FRONTEND noninteractive
 
-# RUN does a few things.  First, it runs the command given to it inside the container
-# being built that will result in the image.  Second, however, it creates
-# a "layer", which is essentially a cache of the current state of the image being 
-# built.  That means, if we change something AFTER this RUN directive, this
-# directive won't be re-executed—docker will pull the layer from a cache.
-#
-# This particular RUN directive is first because of what it does. It sets up
-# the system software that's needed for everything else.  apt-get update
-# refreshes the local cache of what software is available to install
-# and then apt-get install pulls down packages and installs them.
-RUN apt-get update -q && apt-get install -qy \
-                            autoconf\
-                            bison\
-                            build-essential\
-                            curl \
-                            g++ \
-                            gcc \
-                            git \
-                            gnupg2 \
-                            libffi-dev \
-                            libgconf-2-4 \
-                            libgdbm-dev \
-                            libncurses5-dev \
-                            libpq-dev \
-                            libreadline-dev \
-                            libsqlite3-dev \
-                            libssl-dev \
-                            libxi6 \
-                            libyaml-dev \
-                            make \
-                            man \
-                            netcat \
-                            rsync \
-                            software-properties-common\
-                            sqlite3 \
-                            tzdata \
-                            wget \
-                            xvfb \
-                            zip \
-                            zlib1g-dev
+# This is copied from the Rails devcontainer and installs base packages we will need for other things we'll
+# install.
+RUN apt-get update -qq && \
+    apt-get install -y \
+                    build-essential \
+                    curl \
+                    git \
+                    libvips \
+                    procps \
+                    rsync \
+                    wget
 
-# In order to use Postgres 12, we have to add their package repo to install it from there.
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |tee  /etc/apt/sources.list.d/pgdg.list && apt-get update && apt-get install -y postgresql-client-12
+# This installs the latest supported verison of Node. It should be
+# an even numbered version unless you are doing Node development.
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g yarn
 
+# Now install the Postgres client, which is needed for the Postgres gem.  We don't need
+# the entire Postgres server in here.
+# These instructions are from https://www.postgresql.org/download/linux/ubuntu/
+# This is needed because this version of Debian does not have Postgres 15 and we want to be on 
+# the latest version.
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+		wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+		apt-get update && \
+		apt-get -y install postgresql-client-15
 
-# Here, we set up NodeJS, per their instructions. Yes, piping
-# random websites into bash is a bit scary, from a security
-# persecptive, but a) this is only setting up a dev envrionment, and
-# b) if `nodesource.com` has been taken over, you have bigger problems
-# than following along with my book
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && apt-get install -y nodejs
+# Next, we install chromium and chromium-driver to facilitate Rails system tests.
+# There is no Chrome for ARM linux distributions, so we have to use Chromium.
+# Note that although Apple Silicon is capable of emulating AMD instructions, Chrome
+# requires system calls that are not emulated. It is unclear if Apple, Docker, or Google
+# are the ones who could fix this, but none of them are at the moment.
+RUN apt-get -y install chromium chromium-driver
 
-# Here, we set up Yarn, per their instructions. We'll
-# also creat the dependencies-cache folder which will
-# later be a volume to hold dependencies we download here
-RUN mkdir /usr/dependencies-cache && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && apt update && apt install -y yarn && yarn config set cache-folder /usr/dependencies-cache/yarn
+# Now, we set up RubyGems to avoid building documentation. We don't need the docs
+# inside this image and it slows down gem installation to have them.
+# We also install the latest bundler as well as Rails.  Lastly, to help debug stuff inside
+# the container, I need vi mode on the command line and vim to be installed.  These can be 
+# omitted and aren't needed by the Rails toolchain.
+RUN echo "gem: --no-document" >> ~/.gemrc && \
+    gem install bundler && \
+    gem install rails --version ">= 7.0.0" && \
+    echo "set -o vi" >> ~/.bashrc && \
+    apt-get -y install vim
 
-# This sets up a variable we can refer to later.  Because
-# we have to know the ruby-install version in so many places,
-# we set it once here.
-# https://github.com/postmodern/ruby-install
-ARG ruby_installer_version=0.8.5
-
-# This sets up ruby-install, which we will then use to install Ruby.  This is
-# taken from the ruby-install GitHub page and is trying to make sure
-# that what we'e downloaded matches what the maintainers have created.
-RUN wget -O ruby-install-${ruby_installer_version}.tar.gz https://github.com/postmodern/ruby-install/archive/v${ruby_installer_version}.tar.gz && \
-    wget https://raw.github.com/postmodern/postmodern.github.io/master/postmodern.asc && \
-    gpg --import postmodern.asc && \
-    wget https://raw.github.com/postmodern/ruby-install/master/pkg/ruby-install-${ruby_installer_version}.tar.gz.asc && \
-    gpg --verify ruby-install-${ruby_installer_version}.tar.gz.asc ruby-install-${ruby_installer_version}.tar.gz && \
-    tar -xzvf ruby-install-${ruby_installer_version}.tar.gz && \
-    cd ruby-install-${ruby_installer_version}/ && \
-    make install
-
-# This actually installs Ruby, and installs 3.1.3
-# This is a separate run command because we might
-# want to change Ruby versions locally, but we *don't* what to have
-# to re-download and install ruby-install if we can help it.
-RUN ruby-install --system ruby 3.1.3
-
-# OMG SO. MANY. DEPRECATION. WARNINGS. I. DO. NOT. CARE.
-ENV RUBYOPT=-W:no-deprecated
-
-# We need to install bundler explicitly, since the version
-# that comes with Ubuntu is pretty out of date
-RUN gem install bundler && bundle config path /usr/dependencies-cache/bundler 
-
-# This configures RubyGems to not install documentation, 
-# which will speed up gem installs. It also sets vi mode
-# for bash (I'm a vim person so I need this :), and finally
-# installs Rails.
-#
-# The reason we install Rails in the Dockerfile is because we need
-# it to run the rails CLI to do rails new, and we don't want to 
-# have to always do that every time we restart our container.
-#
-# While we're doing that, we might as well create a new rails app and bundle
-# install it so we get the base gems inside this docker file
-RUN echo "gem: --no-document" >> ~/.gemrc && echo "set -o vi" >> ~/.bashrc && gem install rails --version ">= 6.1" && cd /usr/dependencies-cache && rails new empty-rails-app --force --database=postgresql --skip-webpack-install --skip-bundle && cd empty-rails-app && bundle update
-
-
-# This sets up the locale to be American English, using
-# a UTF-8 encoding.  By default, Ubuntu uses a "posix"
-# encoding, which is woefully tied to ASCII and
-# creates annoying problems later.
-#
-# This should not have any bearing on the
-# localization or internationalization of your
-# Rails app.
-RUN apt-get -y update && \
-    apt-get install locales && locale -a && \
-    locale-gen en_US.UTF-8 && locale -a && \
-    update-locale LANG=en_US.utf8 && \
-    dpkg-reconfigure locales
-
-ENV LANG=en_US.utf8
-
-# This downloads chrome and chromedriver.
-RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
-    apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
-    tee  /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get -y update && \
-    apt-get -y install google-chrome-stable && \
-    CHROMEVER=$(google-chrome --product-version | grep -o "[^.]*\.[^.]*\.[^.]*") && \
-    DRIVERVER=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROMEVER") && \
-    wget https://chromedriver.storage.googleapis.com/$DRIVERVER/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && \
-    mv chromedriver /usr/bin/chromedriver && \
-    chown root:root /usr/bin/chromedriver && \
-    chmod +x /usr/bin/chromedriver
-
-# Ruby and Rails result in a lot of deprecation warnings.
-# These are annoying and we don't want to see them right now.
-# I know I sent ENV above, but it doesn't seem to work, and TBH
-# this doesn't actually work unless you remember to make bash a login
-# shell.  No idea why.
-RUN echo "RUBYOPT=-W:no-deprecated" >> /etc/environment &&  echo "export RUBYOPT=-W:no-deprecated" >> ~/.profile
-
-# This creates disk space that survives between container restarts.
-# This volume is for storing RubyGems and Node modules so that we
-# don't have to bundle install or yarn install every single time we
-# restart the docker container.
-VOLUME /usr/dependencies-cache
-
-WORKDIR «value WORKDIR from bin/vars»
+# This entrypoint produces a nice help message and waits around for you to do
+# something with the container.
+COPY ./docker-entrypoint.sh /root
 
 # This says to expose the given port to the outside world.
-EXPOSE «value EXPOSE from bin/vars»
+EXPOSE %EXPOSE%
 
+# Although WORKDIR specifies a base directory where COPY, ADD, RUN, etc. commands run from,
+# we use it here as a default directory where docker run AKA bin/exec commands will
+# be run from. Essentially if you bin/exec bash, this is the directory you will end up in.
+# It is also where docker-compose.yml will map your local directory.
+WORKDIR %WORKDIR%
 # vim: ft=Dockerfile
