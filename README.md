@@ -1,40 +1,92 @@
 # Dev Environment for Sustainable Web Development with Ruby on Rails
 
-This builds a Docker image that is used by my book, [Sustainable Web Development with Ruby on Rails](https://sustainable-rails.com).
+This is a basis for creating a Ruby on Rails development environment using Docker.  It is based on the development environment used for my book [Sustainable Web Development with Ruby on Rails](https://sustainable-rails.com) and can be used and customized to meet any needs for doing local development.
 
-If you just want to follow along, I suggest you [pull the image from Docker Hub](https://hub.docker.com/r/davetron5000/sustainable-rails-dev), set up the `docker-compose.yml` file as directed and go from there.
+## What problem does this solve?
 
-*This* repo is how that image is built, and you can use this to make your own.
+* Setting up dependencies for developing Rails apps is not easy, especially as operating systems change.
+* Although Docker can solve this, it is difficult to use and difficult to configure.
 
-## What's in the Image
+## How does it solve it?
 
-* Ruby & Bundler
-* Node
-* Rails
-* Chromedriver
+This provides a template for a `Dockerfile` in which your Rails app can run.  It also provides a template for a
+`docker-compose.yml` file you can use to run dependent services like Postgres or Redis.  It then provides several
+shell scripts that wrap the functionality you will need to do work.
 
-The image is quite large because it installs all the gems needed for a new Rails app to work. In
-theory, when you use this image, `rails new` will not need to install any gems from the Internet.
+It is currently set up to produce a Debian-based ARM64 image, because this is what is needed to do work on Apple
+Silicon.  Although Apple Silicon can emulate Intel and AMD-based images, the emulation is incomplete and, in
+particular, Chrome does not work. See *Customizing* below if you don't want to use ARM64 images.
+
+## How to Use
+
+1. Make sure Docker is installed
+1. Clone this repo
+1. Open `bin/vars` and edit the values in there as instructed.  You should only need to change `ACCOUNT`, `REPO`,
+   and `TAG`.
+1. Run `bin/build`
+1. Run `bin/start`
+1. In another terminal, run `bin/exec bash`.  You will now be "logged in" to the Docker container where your app
+   can run.  This Docker container has:
+   * Ruby & Bundler
+   * Rails
+   * Node
+   * Chromium and chromedriver
 
 ## Customizing
 
-1. Clone this repo
-2. Make sure you have Docker installed
-3. Edit `bin/vars`.  In particular, you will need to modify:
-   * `ACCOUNT` - account name on Docker Hub (used for naming the image only, but if you plan to push, make sure this value is accurate)
-   * `REPO` - repo name for Docker Hub (again, only used for naming the image, but if you are going to push, make sure you have created this repo on Docker Hub. It does not need to be public)
-   * `TAG` - tag for the image. Recommend you come up with a good scheme to avoid confusing locally. I use `«rails-version»--«ruby-version»`, e.g. `rails-7.0.4--ruby-3.1.3`
-4. Edit `Dockerfile.template` and `docker-compose.yml.template` as needed to change stuff.  *DO NOT* edit `Dockerfile` or `docker-compose.yml` directly as `bin/build` will be using `bin/vars` to make sure that those two files are consistent with one another.
-5. `bin/build` will re-generate `Dockerfile` and `docker-compose.yml` based on the contents of the two `.template` files and `bin/vars`. Note that this may take a really long time since it compiles Ruby from source.  On an M2 Macbook Air, the entire process takes about an hour the first time. Once you have Ruby installed, changes to the Docker config *after* that in the file can be built much faster.
-6. `bin/start` will start up whatever is in `docker-compose.yml`.
-7. In another terminal window, `bin/exec bash` with run `bash` inside the image where Ruby and Rails are installed, effectively "logging you in" to the running container.  You should be in `/root/work`, running as `root` and see all the files in this repo mirrored.  If you run `rails new my-app` it will create a new app in this directory.
+This repo is intended to be the basis for *your* dev environment, so my recommendation is to create a new repo
+where you manage your dev-environment and seed it with these files.
 
-## Notes
+There are four main points where you can customize things:
+
+* `bin/vars` - this allows limited control over things like the image name and ports.
+* `docker-compose.yml.template` - If you need a different database, don't need redis, need elastic search, etc, you
+can add services here as needed.  This version includes Postgres and Redis, so you can use those as examples for
+what to do.  Most common pieces of infrastructure can be run in Docker, so you should be able to get what you need.
+`bin/build` will currently replace the following variables when it's run:
+  - `%TAG%` - The value of `TAG` from `bin/vars`
+  - `%REPO%` - The value of `REPO` from `bin/vars`
+  - `%ACCOUNT%` - The value of `ACCOUNT` from `bin/vars`
+  - `%EXPOSE%` - The value of `EXPOSE` from `bin/vars`
+  - `%WORKDIR%` - The value of `WORKDIR` from `bin/vars`
+  - `%LOCAL_PORT%` - The value of `LOCAL_PORT` from `bin/vars`
+  - `%VOLUME_SOURCE%` - The full path to the current working directory.
+* `Dockerfile.template` - this is the basis for the `Dockerfile` that is generated by `bin/build`. You can add whatever you like in here, customizing anything as needed.  You may wish to remove the many comments in there that explain how it's set up.  You also may wish to modify the architecture.  Basically, this is a vanilla `Dockerfile` that you can do what you want to, but it has two variables that are replaced by `bin/build`:
+  - `%EXPOSE%` - The value of `EXPOSE` from `bin/vars`
+  - `%WORKDIR%` - The value of `WORKDIR` from `bin/vars`
+* The scripts in `bin/` - You can modify and enhance these scripts to provide more customizations as needed.  I
+strongly recommend maintaing these scripts as no-arg, dependency-free shell scripts, because that will be the
+simplest and most reliable way to keep your dev environment consistent and working.  Aliases and required
+command-line arguments are just annoying.
+
+## Where is this being used?
+
+This was extracted from the toolchain I created for my book, [Sustainable Web Development with Ruby on Rails](https://sustainable-rails.com).  All the examples and code in that book were executed many times in this development environment.  I have also been using this for the past two years at my startup to manage the development of two Rails apps and a Zendesk sidebar app.
+
+## The World's Quickest Docker Tutorial
+
+Docker is confusing, poorly documented, and poorly designed, so if it makes you feel as stupid as it makes me feel, that is OK.  Here is a bit of conceptual grounding to help understand what is going on.
+
+* A `Dockerfile` is a set of instructions for a computer you would like to run.
+* *Building* a `Dockerfile` produces an *Image*.  This is a set of bytes on your hard drive and you could consider
+this to be a clone of the hard drive of a computer you want to run.
+* *Starting* an image produces a *Container*.  This is a virtualized computer running the image
+* In `docker-compose.yml`, there are services, which describe the containers you want to run in unision. Because a
+container is a virtualized computer running an image, each service requires an image that will be run.  All the
+containers are run on the same network and can see each other.
+* When you *Host* that is *your computer*. That is where Docker is running. I cannot think of a more confusing and
+unintuitive term  but that is what they went with.
+
+To make another analogy, `Dockerfile` is like source code to a class. An image is the class itself, and a container
+is an object you created from that class. `docker-compose.yml` is your program that integrates objects of several
+classes together.
+
+## Helpful Notes
 
 Inside the container, you can connect to Postgres like so:
 
 ```
-> psql -Hdb -Upostgres -p5432 # password, when promted, is postgres
+> PGPASSWORD=password psql -Hdb -Upostgres -p5432
 postgres=#
 ```
 
@@ -44,22 +96,80 @@ must:
 > bin/rails c -b0.0.0.0
 ```
 
-When you do that, your Rails app should be available to your localhost on port 9000 (or whatever value you set in `bin/vars` for `EXPOSE`)
+When you do that, your Rails app should be available to your localhost on port 9999 (or whatever value you set in `bin/vars` for `EXPOSE`)
 
-### Q&A
+## Core Values
 
-#### Why didn't you use the Ruby base image?
+* As few dependencies as possible
+* Your computer is not your development environment, it *runs* your development environment
+* Useful for working professionals
+* Programmers should understand how their development environment works
 
-I wanted to be more explicit about what's being installed.
+### Non-Values
 
-#### Why is this all generated?
+* Flexibility
+* Production Deployments
+* Hiding details about how this works from the user
+
+
+### Things That Could be Improved
+
+* A way to QA this on other platforms like Linux or Windows without me having to buy a Linux machine or a Windows
+machine.
+* Ability to target more than just ARM64 without a lot of customizations
+* Probably some Docker best practices I'm not aware of needing to consider
+
+## FAQ
+
+### Why is this ARM64?
+
+When running Chrome inside an AMD-based Docker container, Apple Silicon is unable to emulate certain system calls
+it needs, thus you cannot run Rails system tests in an AMD-based Docker container running on Apple Silicon.
+
+### Why is this using Chromium?
+
+See the answer above.  Chrome is not available for ARM64-based Linux operating systems, however Chromium is.
+
+### How can I use AMD-based Images?
+
+Change this:
+
+```
+FROM arm64v8/ruby:3.1
+```
+
+to whatever base image you like, such as `amd64/ruby:3.1`.
+
+If you do that, you don't have to use chromium. You can remove this line:
+
+```
+RUN apt-get -y install chromium chromium-driver
+```
+
+You will need to replace it with a more convoluted set of invocations that has changed many times since I first
+created this repo, so I will not document them here, as they are likely to be out of date. I'm sorry about that,
+but Google does not care about making this process easy.
+
+### What about that docked rails thing?
+
+The Rails GitHub org has a repo called [docked](https://github.com/rails/docked) that ostensibly sets up a dev
+environment for Rails.  It may evolve to be more useful, but here are the problems it has that this repo does not:
+
+* It will not work on Apple Silicon for reasons mentioned above re: Chrome
+* It does not provide a solution for running dependent infrastructure like Postgres which, in experience, is much
+harder to do than getting Rails running.
+* It requires setting up shell aliases, which I dislike
+* It uses an odd-numbered version of Node, which go end of life often. It's better and safer to use even-numbered
+versions which are supported long-term (unless you are doing lots of Node development)
+* It is designed for beginners to programming and Rails, which is great because we need more Rails developers, but
+that is a different use-case than a development environment for professional, experienced Rails developers.
+
+### Why is this all generated?
 
 `docker-compose.yml` and `Dockerfile` share some values, but Docker provides no easy mechanism for that that I could figure out. So, the files are generated.
 
-#### Why not use Vagrant?
+### Why not use Vagrant?
 
-No reason, but Docker is a more generally useful skill to have.
+Docker is a more generally useful skill to have, so I decided to focus on this and not learn Vagrant, which is less
+useful.
 
-#### I'm on MacOS and it's SUPER SLOW
-
-Yup.  You can [set up NFS](https://naildrivin5.com/blog/2020/05/13/fast-disk-access-mac-using-docker-nfs-webpack-dev-server.html) to make it much much faster.  The only problem is that Webpack dev mode doesn't work.  But that's probably fine because you should using only what JavaScript you need, right?
