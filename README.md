@@ -74,7 +74,7 @@ this to be a clone of the hard drive of a computer you want to run.
 * In `docker-compose.yml`, there are services, which describe the containers you want to run in unision. Because a
 container is a virtualized computer running an image, each service requires an image that will be run.  All the
 containers are run on the same network and can see each other.
-* When you *Host* that is *your computer*. That is where Docker is running. I cannot think of a more confusing and
+* When you see the word *Host* that is *your computer*. That is where Docker is running. I cannot think of a more confusing and
 unintuitive term  but that is what they went with.
 
 To make another analogy, `Dockerfile` is like source code to a class. An image is the class itself, and a container
@@ -156,15 +156,17 @@ The Rails GitHub org has a repo called [docked](https://github.com/rails/docked)
 environment for Rails.  It may evolve to be more useful, but here are the problems it has that this repo does not:
 
 * It will not work on Apple Silicon for reasons mentioned above re: Chrome
-* It does not provide a solution for running dependent infrastructure like Postgres which, in experience, is much
+* It does not provide a solution for running dependent infrastructure like Postgres which, in my experience, is much
 harder to do than getting Rails running.
-* It requires setting up shell aliases, which I dislike
-* It uses an odd-numbered version of Node, which go end of life often. It's better and safer to use even-numbered
-versions which are supported long-term (unless you are doing lots of Node development)
+* It requires setting up shell aliases, which I dislike.
+* It uses an odd-numbered version of Node, and it's not a good idea to use that for development or production
+  unless you are working on Node itself.  Odd-numbered versions go end-of-life frequently and become unsupported. It's better and safer to use even-numbered versions.
 * It is designed for beginners to programming and Rails, which is great because we need more Rails developers, but
-that is a different use-case than a development environment for professional, experienced Rails developers.
+that is a different use-case than a development environment for professional, experienced Rails developers. And
+yes, I mean "professional" in the sense of "getting paid to write Rails" and not in whatever stupid way Uncle Bob
+means it.
 
-### Why is this all generated?
+### Why is this all generated from templates?
 
 `docker-compose.yml` and `Dockerfile` share some values, but Docker provides no easy mechanism for that that I could figure out. So, the files are generated.
 
@@ -173,3 +175,14 @@ that is a different use-case than a development environment for professional, ex
 Docker is a more generally useful skill to have, so I decided to focus on this and not learn Vagrant, which is less
 useful.
 
+## Contributions
+
+I would love some!  I am not a Docker expert and I only have used this for the way I do Rails. I'd love for this to
+be more useful (see above).
+
+A few things I am not interested in:
+
+* Adding dependencies.  I love Ruby and love writing command line apps in Ruby but Ruby's exsitence is not
+reliable, which is why the scripts are in bash.
+* Non-Rails web development. I want this to be about Rails
+* Deprecated or unsupported versions of things
