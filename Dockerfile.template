@@ -75,6 +75,9 @@ RUN echo "gem: --no-document" >> ~/.gemrc && \
     echo "set -o vi" >> ~/.bashrc && \
     apt-get -y install vim
 
+# Allows rails server to be accessible outside this docker container
+ENV BINDING="0.0.0.0"
+
 # This entrypoint produces a nice help message and waits around for you to do
 # something with the container.
 COPY ./docker-entrypoint.sh /root
