@@ -4,15 +4,15 @@
 #
 # You can see how the image is made by going here:
 #
-# https://github.com/docker-library/ruby/blob/9fd589661dd0e12b082336e9c6f731196fe39ba8/3.1/bullseye/Dockerfile
+# https://github.com/docker-library/ruby/blob/8a6d8c6532c1f918bae81d83b2fedc9b5bd7aada/3.2/bullseye/Dockerfile
 #
 # To determine the OS, you must navigate backwards using the FROM directive from
 # that Dockerfile. You will find your way to Debian's repo here:
 #
-# https://github.com/debuerreotype/docker-debian-artifacts/blob/64b13cf5860ac15c1d909abd7239516db9748fea/bullseye/Dockerfile
+# https://github.com/debuerreotype/docker-debian-artifacts/blob/2776d8c4859a7e6e275ee8b5dd144488d7387c24/bullseye/Dockerfile
 #
 # Thus, this is a Debian-based build.
-FROM arm64v8/ruby:3.1
+FROM arm64v8/ruby:3.2
 
 # Before we start, you'll note there are a lot of RUN directives. Each of these creates a layer that is cached by
 # Docker.  Thus, if you change the second RUN directive and rebuild the image, the first RUN directive doesn't have
