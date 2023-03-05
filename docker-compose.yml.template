@@ -79,8 +79,7 @@ services:
     # titled "Environment Variables", you
     # can see the default values for
     # connecting to postgres.
-    image: postgres:15
-    platform: linux/amd64
+    image: arm64v8/postgres:15
     # We don't want to pull this big image every time
     pull_policy: "missing"
     # In Postgres 15, there is no default value for the password.
@@ -93,8 +92,7 @@ services:
   # until we start talking about background jobs.  Like the
   # Postgres block above, this starts up a Redis server using 6.x.x
   redis:
-    image: redis:6
-    platform: linux/amd64
+    image: arm64v8/redis:6
     # We don't want to pull this big image every time
     pull_policy: "missing"
 # vim: ft=yaml nospell
