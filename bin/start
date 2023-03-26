@@ -1,5 +1,19 @@
 #!/bin/sh
-echo "🚀 Starting docker-compose.yml"
-docker compose up
+
+set -e
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+. ${SCRIPT_DIR}/setupkit.sh.lib
+
+usage_on_help "Starts all services, including a container in which to run your app" "" ${@}
+
+. ${SCRIPT_DIR}/../docker-compose.env
+
+log "🚀" "Starting docker-compose.yml"
+
+log "🚉" "Exporting DOCKER_DEFAULT_PLATFORM as '${DOCKER_DEFAULT_PLATFORM}'"
+export DOCKER_DEFAULT_PLATFORM
+docker compose -p "${PROJECT_NAME}" --env-file ${SCRIPT_DIR}/../docker-compose.env up --timestamps --force-recreate
 
 # vim: ft=bash

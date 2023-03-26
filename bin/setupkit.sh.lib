@@ -1,0 +1,39 @@
+log() {
+  emoji=$1
+  remainder=${*:2}
+  if [ -z "${NO_EMOJI}" ]; then
+    echo "[ ${0} ] ${*}"
+  else
+    if [ -z "$remainder" ]; then
+      echo "[ ${0} ] ${*}"
+    else
+      echo "[ ${0} ] ${remainder}"
+    fi
+  fi
+
+}
+
+
+usage() {
+  echo "usage: ${0} [-h] ${extra_usage}"
+  if [ ! -z "$1" ]; then
+    echo
+    echo "DESCRIPTION"
+    echo "    ${description}"
+  fi
+  exit 0
+}
+
+usage_on_help() {
+  description=$1
+  extra_usage=$2
+  cli_args=${@:3}
+
+  for arg in ${cli_args}; do
+    if [ ${arg} = "-h" ] || [ ${arg} = "--help" ]; then
+      usage $description
+    fi
+  done
+}
+
+# vim: ft=bash
