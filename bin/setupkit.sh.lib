@@ -10,9 +10,7 @@ log() {
       echo "[ ${0} ] ${remainder}"
     fi
   fi
-
 }
-
 
 usage() {
   echo "usage: ${0} [-h] ${extra_usage}"

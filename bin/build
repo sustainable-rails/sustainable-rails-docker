@@ -13,4 +13,5 @@ usage_on_help "Builds the Docker image based on the Dockerfile" "" ${@}
 docker build  -t $IMAGE ./
 
 log "🌈" "Your Docker image has been built tagged '${IMAGE}'"
+log "🔄" "You can now run bin/start to start it up, though you may need to stop it first with Ctrl-C"
 # vim: ft=bash
