@@ -90,10 +90,10 @@ Inside the container, you can connect to Postgres like so:
 postgres=#
 ```
 
-When you run Rails, you need to tell it to bind to `0.0.0.0`, so you can't just do `bin/rails c`.  Instead you
+When you run Rails, you need to tell it to bind to `0.0.0.0`, so you can't just do `bin/rails s`.  Instead you
 must:
 ```
-> bin/rails c -b0.0.0.0
+> bin/rails s --binding 0.0.0.0
 ```
 
 When you do that, your Rails app should be available to your localhost on port 9999 (or whatever value you set in `bin/vars` for `EXPOSE`)
