@@ -86,7 +86,7 @@ classes together.
 Inside the container, you can connect to Postgres like so:
 
 ```
-> PGPASSWORD=password psql -Hdb -Upostgres -p5432
+> PGPASSWORD=postgres psql -Hdb -Upostgres -p5432
 postgres=#
 ```
 
