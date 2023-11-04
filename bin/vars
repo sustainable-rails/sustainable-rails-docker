@@ -11,9 +11,9 @@ LOCAL_PORT=9999
 # of the image that's built by this repo
 #
 # Set this to your account name on Docker Hub (required)
-ACCOUNT=davetron5000
+ACCOUNT=coloradobum
 # Set this to the repo name on Docker Hub (required)
-REPO=sustainable-rails-docker
+REPO=CHANGE_ME
 # Set this to the tag name to use (required)
 TAG=rails-7-arm64
 
