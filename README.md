@@ -1,3 +1,7 @@
+# SUPERCEDED BY https://github.com/sustainable-rails/sustainable-rails-dev
+
+----
+
 # Dev Environment for Sustainable Web Development with Ruby on Rails
 
 This is a basis for creating a Ruby on Rails development environment using Docker.  It is based on the development environment used for my book [Sustainable Web Development with Ruby on Rails](https://sustainable-rails.com) and can be used and customized to meet any needs for doing local development.
